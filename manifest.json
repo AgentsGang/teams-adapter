@@ -1,0 +1,49 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "YOUR-BOT-APP-ID-GUID",
+  "packageName": "com.yourcompany.yourbot",
+  "developer": {
+    "name": "Your Company",
+    "websiteUrl": "https://yourcompany.com",
+    "privacyUrl": "https://yourcompany.com/privacy", 
+    "termsOfUseUrl": "https://yourcompany.com/terms"
+  },
+  "name": {
+    "short": "YourBot",
+    "full": "YourBot AI Assistant"
+  },
+  "description": {
+    "short": "AI-powered assistant bot",
+    "full": "This bot listens for mentions and replies using AI agent"
+  },
+  "icons": {
+    "outline": "outline-icon.png",
+    "color": "color-icon.png"
+  },
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "yourdomain.com"
+  ],
+  "bots": [
+    {
+      "botId": "YOUR-BOT-APP-ID-GUID",
+      "scopes": [
+        "personal",
+        "team",
+        "groupchat"
+      ],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "composeExtensions": [],
+  "webApplicationInfo": {
+    "id": "YOUR-BOT-APP-ID-GUID",
+    "resource": "api://YOUR-BOT-APP-ID-GUID"
+  }
+}
