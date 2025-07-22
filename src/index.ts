@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
 import { BotFrameworkAdapter, TurnContext } from 'botbuilder';
 import express from 'express';
 import bodyParser from 'body-parser';
+
+dotenv.config();
 
 // Configure the adapter
 const adapter = new BotFrameworkAdapter({
@@ -61,16 +64,31 @@ app.listen(PORT, () => {
 });
 
 async function fetchAgentResponse(input: string, activity: any): Promise<string> {
+
+  // Extract bot id from mention entity if available
+  let agentId = 'cmdemuhxb0001us0gj4c8k05m';
+  if (activity && Array.isArray(activity.entities)) {
+    const mention = activity.entities.find((e: any) => e.type === 'mention' && e.mentioned && e.mentioned.id);
+    if (mention && mention.mentioned && mention.mentioned.id) {
+      agentId = mention.mentioned.id;
+    }
+  }
   const payload = {
     input,
-    agentId: 'default-agent'
+    agentId
   };
+
+  // Get API key from environment variable
+  const apiKey = process.env.AGENTSGANG_API_KEY || '';
 
   console.log('Sending payload to agent engine:', JSON.stringify(payload));
   try {
     const res = await fetch('http://localhost:3000/api/agents/execute', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Api-Key ${apiKey}`
+      },
       body: JSON.stringify(payload),
     });
 
