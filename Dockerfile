@@ -9,8 +9,11 @@ RUN npm ci --ignore-scripts
 
 # Copy source code and build
 COPY tsconfig.json ./
-COPY src/ ./src/
+COPY src/ ./
 RUN npm run build
+
+# Debug: проверить, что index.js существует
+RUN ls -R /app/dist
 
 # Stage 2: Production
 FROM node:20-alpine
