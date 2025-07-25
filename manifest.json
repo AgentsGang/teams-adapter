@@ -2,17 +2,16 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
   "manifestVersion": "1.17",
   "version": "1.0.0",
-  "id": "YOUR-BOT-APP-ID-GUID",
-  "packageName": "com.yourcompany.yourbot",
+  "id": "45fd9c73-e898-4e6c-87e3-dc24ea676bfd",
   "developer": {
-    "name": "Your Company",
-    "websiteUrl": "https://yourcompany.com",
-    "privacyUrl": "https://yourcompany.com/privacy", 
-    "termsOfUseUrl": "https://yourcompany.com/terms"
+    "name": "Agents Gang",
+    "websiteUrl": "https://www.agentsgang.xyz",
+    "privacyUrl": "https://www.agentsgang.xyz/privacy", 
+    "termsOfUseUrl": "https://www.agentsgang.xyz/terms"
   },
   "name": {
-    "short": "YourBot",
-    "full": "YourBot AI Assistant"
+    "short": "Artem4ik",
+    "full": "Artem4ik AI Assistant"
   },
   "description": {
     "short": "AI-powered assistant bot",
@@ -27,15 +26,15 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "yourdomain.com"
+    "teams-adapter-git-main-artemgontars-projects.vercel.app"
   ],
   "bots": [
     {
-      "botId": "YOUR-BOT-APP-ID-GUID",
+      "botId": "45fd9c73-e898-4e6c-87e3-dc24ea676bfd",
       "scopes": [
         "personal",
         "team",
-        "groupchat"
+        "groupChat"
       ],
       "supportsFiles": false,
       "isNotificationOnly": false
@@ -43,7 +42,7 @@
   ],
   "composeExtensions": [],
   "webApplicationInfo": {
-    "id": "YOUR-BOT-APP-ID-GUID",
-    "resource": "api://YOUR-BOT-APP-ID-GUID"
+    "id": "45fd9c73-e898-4e6c-87e3-dc24ea676bfd",
+    "resource": "api://45fd9c73-e898-4e6c-87e3-dc24ea676bfd"
   }
 }
