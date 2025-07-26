@@ -27,9 +27,9 @@ interface AppConfig {
 
 // Validate required environment variables
 const requiredEnvVars = [
-  'MicrosoftAppId',
-  'MicrosoftAppPassword', 
-  'MicrosoftAppTenantId',
+  'MICROSOFT_APP_ID',
+  'MICROSOFT_APP_PASSWORD',
+  'MICROSOFT_APP_TENANT_ID',
   'AGENTSGANG_API_KEY'
 ];
 
@@ -42,18 +42,18 @@ for (const envVar of requiredEnvVars) {
 
 export const config: AppConfig = {
   microsoft: {
-    appId: process.env.MicrosoftAppId!,
-    appPassword: process.env.MicrosoftAppPassword!,
-    appTenantId: process.env.MicrosoftAppTenantId!,
-    appType: 'SingleTenant'
+    appId: process.env.MICROSOFT_APP_ID!,
+    appPassword: process.env.MICROSOFT_APP_PASSWORD!,
+    appTenantId: process.env.MICROSOFT_APP_TENANT_ID!,
+    appType: process.env.MICROSOFT_APP_TYPE!
   },
   agent: {
     apiKey: process.env.AGENTSGANG_API_KEY!,
-    engineUrl: process.env.AGENT_ENGINE_URL || 'http://localhost:3000',
-    timeout: parseInt(process.env.AGENT_TIMEOUT || '30000')
+    engineUrl: process.env.AGENT_ENGINE_URL!,
+    timeout: 30000
   },
   server: {
-    port: parseInt(process.env.PORT || '3978'),
+    port: 3978,
     environment: process.env.NODE_ENV || 'development'
   },
   limits: {
