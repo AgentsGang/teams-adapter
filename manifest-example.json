@@ -21,6 +21,7 @@
     "outline": "outline-icon.png",
     "color": "color-icon.png"
   },
+  "accentColor": "#6264A7",
   "permissions": [
     "identity",
     "messageTeamMembers"

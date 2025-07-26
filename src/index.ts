@@ -1,108 +1,88 @@
-import dotenv from 'dotenv';
-import { BotFrameworkAdapter, TurnContext } from 'botbuilder';
 import express from 'express';
-import bodyParser from 'body-parser';
+import { config } from './config/environment';
+import { adapter } from './config/bot';
+import { MessageProcessor } from './services/messageProcessor';
+import { logger } from './utils/logger';
 
-dotenv.config();
-
-// Configure the adapter
-const adapter = new BotFrameworkAdapter({
-  appId: process.env.MICROSOFT_APP_ID,
-  appPassword: process.env.MICROSOFT_APP_PASSWORD,
-});
-
-// Generic error handler
-adapter.onTurnError = async (context, error) => {
-  console.error(`[onTurnError]: ${error}`);
-  await context.sendActivity('Something went wrong.');
-};
-
-// Create the Express server
+// Create Express server
 const app = express();
-const PORT = process.env.PORT || 3978;
-app.use(bodyParser.json());
 
-app.post('/api/messages', (req, res) => {
-  console.log('Incoming POST /api/messages');
-  adapter.processActivity(req, res, async (context) => {
-    console.log('Processing activity...');
-    if (context.activity.type === 'message') {
-      const msg = context.activity.text?.trim() || '';
-      console.log(`Received message: "${msg}" from user: ${context.activity.from?.name}`);
-      // Check if the bot was mentioned
-      const mentioned = context.activity.entities?.some(e => e.type === 'mention' && e.mentioned?.name === 'Agent');
-      if (mentioned) {
-        console.log('Bot was mentioned in the message.');
-        // Remove the mention from the message text
-        const input = TurnContext.removeRecipientMention(context.activity);
-        console.log(`Processed input after mention removal: "${input}"`);
+// Middleware
+app.use(express.json({ limit: config.limits.requestSizeLimit }));
 
-        // Send the processed text to the AI engine
-        const agentResponse = await fetchAgentResponse(input, context.activity);
-        console.log(`Agent response: "${agentResponse}"`);
-
-        // Send the response back to Teams
-        return await context.sendActivity(agentResponse);
-      } else {
-        console.log('Bot was not mentioned, no response sent.');
-        
-        await context.sendActivity('Debug: Message filtered, bot not mentioned.');
-        return;
-      }
-    } else {
-      console.log(`Activity type is not 'message': ${context.activity.type}`);
-      await context.sendActivity('This bot only responds to messages.');
-      return;
-    }
-  }).catch(error => {
-    console.error('Error in processActivity:', error);
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+    environment: config.server.environment
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Bot listening on port ${PORT}`);
-});
+app.post('/api/messages', async (req, res) => {
+  const startTime = Date.now();
+  
+  logger.info('Incoming bot request', {
+    userAgent: req.headers['user-agent'],
+    contentLength: req.headers['content-length'],
+    ip: req.ip
+  });
 
-async function fetchAgentResponse(input: string, activity: any): Promise<string> {
-  let agentId;
-  if (activity && Array.isArray(activity.entities)) {
-    const mention = activity.entities.find((e: any) => e.type === 'mention' && e.mentioned && e.mentioned.id);
-    if (mention && mention.mentioned && mention.mentioned.id) {
-      agentId = mention.mentioned.id;
-    }
-  }
-  const payload = {
-    input,
-    agentId
-  };
-
-  // Get API key from environment variable
-  const apiKey = process.env.AGENTSGANG_API_KEY || '';
-
-  // Get agent engine URL from environment variable or use default
-  const agentEngineUrl = process.env.AGENT_ENGINE_URL || 'http://localhost:3000';
-
-  console.log('Sending payload to agent engine:', JSON.stringify(payload));
   try {
-    const res = await fetch(`${agentEngineUrl}/api/agents/execute`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Api-Key ${apiKey}`
-      },
-      body: JSON.stringify(payload),
+    await adapter.process(req, res, async (context) => {
+      await MessageProcessor.processMessage(context);
     });
 
-    if (!res.ok) {
-      console.error(`Agent Engine returned status ${res.status}`);
-      throw new Error(`Agent Engine returned status ${res.status}`);
-    }
+    logger.performance('Request completed', Date.now() - startTime);
 
-    const { response } = await res.json();
-    console.log('Received response from agent engine:', response);
-    return response;
   } catch (error) {
-    console.error('Error fetching agent response:', error);
-    return "Sorry, I couldn't process your request.";
+    const err = error as any;
+    logger.error('Adapter process error', {
+      error: err && err.message ? err.message : String(error),
+      stack: err && err.stack ? err.stack : undefined,
+      duration: Date.now() - startTime
+    });
+
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
-}
+});
+
+// Graceful shutdown handlers
+const gracefulShutdown = (signal: string) => {
+  logger.info(`${signal} received, shutting down gracefully`);
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Unhandled error handlers
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection', {
+    reason: reason instanceof Error ? reason.message : String(reason),
+    stack: reason instanceof Error ? reason.stack : undefined,
+    promise: String(promise)
+  });
+});
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception', {
+    error: error.message,
+    stack: error.stack
+  });
+  process.exit(1);
+});
+
+// Start server
+app.listen(config.server.port, () => {
+  logger.info('Bot server started', {
+    port: config.server.port,
+    environment: config.server.environment,
+    nodeVersion: process.version
+  });
+});
+
+export default app;
